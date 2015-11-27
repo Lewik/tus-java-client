@@ -16,6 +16,7 @@ public class TusClient {
     public final static String TUS_VERSION = "1.0.0";
 
     private URL uploadCreationURL;
+    private HttpURLConnection uploadCreationConnection;
     private boolean resumingEnabled;
     private TusURLStore urlStore;
 
@@ -44,6 +45,32 @@ public class TusClient {
      */
     public URL getUploadCreationURL() {
         return uploadCreationURL;
+    }
+
+    /**
+     * Set the connection used for creating new uploads. This is required if you want to initiate new
+     * uploads using {@link #createUpload} or {@link #resumeOrCreateUpload} but is not used if you
+     * only resume existing uploads.
+     *
+     * @param uploadCreationConnection Absolute upload creation URL
+     */
+    public void setUploadCreationConnection(HttpURLConnection uploadCreationConnection) {
+        this.uploadCreationConnection = uploadCreationConnection;
+    }
+
+    /**
+     * Get the current upload creation connection
+     *
+     * @throws IOException Thrown if an exception occurs while issuing the HTTP request.
+     * @return Current upload creation connection
+     */
+    public HttpURLConnection getUploadCreationConnection() throws IOException {
+        if (uploadCreationConnection != null) {
+            return uploadCreationConnection;
+        } else {
+            return (HttpURLConnection) uploadCreationURL.openConnection();
+        }
+
     }
 
     /**
@@ -93,7 +120,7 @@ public class TusClient {
      * @throws IOException Thrown if an exception occurs while issuing the HTTP request.
      */
     public TusUploader createUpload(TusUpload upload) throws ProtocolException, IOException {
-        HttpURLConnection connection = (HttpURLConnection) uploadCreationURL.openConnection();
+        HttpURLConnection connection = getUploadCreationConnection();
         connection.setRequestMethod("POST");
         prepareConnection(connection);
 
